@@ -11,6 +11,9 @@ use App\Form\PropertySearchType;
 use App\Entity\CategorySearch;
 use App\Form\CategorySearchType;
 
+use App\Entity\PriceSearch;
+use App\Form\PriceSearchType;
+
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -20,12 +23,37 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
-
-
-
-
 class IndexController extends AbstractController
 {
+
+    /**
+     * @Route("/art_prix/", name="article_par_prix")
+     * Method({"GET"})
+     */
+    public function articlesParPrix(Request $request)
+    {
+     
+      $priceSearch = new PriceSearch();
+      $form = $this->createForm(PriceSearchType::class,$priceSearch);
+      $form->handleRequest($request);
+
+      $articles= [];
+
+      if($form->isSubmitted() && $form->isValid()) {
+        $minPrice = $priceSearch->getMinPrice(); 
+        $maxPrice = $priceSearch->getMaxPrice();
+          
+        $articles= $this->getDoctrine()->getRepository(Article::class)->findByPriceRange($minPrice,$maxPrice);
+    }
+
+    return  $this->render('articles/articlesParPrix.html.twig',[ 'form' =>$form->createView(), 'articles' => $articles]);  
+  }
+  
+
+
+
+
+
   /**
     *@Route("/",name="article_list")
     */
@@ -180,7 +208,12 @@ class IndexController extends AbstractController
         $category = $categorySearch->getCategory();
        
         if ($category!="") 
-          $articles= $this->getDoctrine()->getRepository(Article::class)->findBy(['category' => $category] );
+        {
+          
+          $articles= $category->getArticles();
+         // ou bien 
+         //$articles= $this->getDoctrine()->getRepository(Article::class)->findBy(['category' => $category] );
+        }
         else   
           $articles= $this->getDoctrine()->getRepository(Article::class)->findAll();
         }

@@ -7,6 +7,7 @@ class PropertySearch
 
    private $nom;
 
+   
    public function getNom(): ?string
    {
        return $this->nom;
